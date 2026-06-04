@@ -1,5 +1,5 @@
 import re
-from astrbot.api.all import * # 核心改动 1：使用官方最新万能导入法，绝不报错
+from astrbot.api.all import * 
 
 BLACK_WHITE_MEMBERS = {
     "卑鄙小企鹅": {
@@ -39,8 +39,8 @@ class BWAnimalDetectorPlugin(Star):
         self.animals = sorted(list(BLACK_WHITE_MEMBERS.keys()), key=len, reverse=True)
         self.pattern = re.compile(f"({'|'.join(self.animals)})")
 
-    # 核心改动 2：使用最新版的事件监听装饰器，拦截所有群聊和私聊消息
-    @filter.event_message_type(filter.EventMessageType.ALL)
+    # 核心修复：直接使用 event_message_type 和 EventMessageType，去掉多余的前缀
+    @event_message_type(EventMessageType.ALL)
     async def handle_group_message(self, event: AstrMessageEvent):
         msg_text = event.message_str.strip()
         
