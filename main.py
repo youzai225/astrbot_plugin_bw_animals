@@ -1,6 +1,5 @@
 import re
-from astrbot.api.event import filter, AstrMessageEvent
-from astrbot.api.star import Context, Star, register
+from astrbot.api.all import * # 核心改动 1：使用官方最新万能导入法，绝不报错
 
 BLACK_WHITE_MEMBERS = {
     "卑鄙小企鹅": {
@@ -37,15 +36,14 @@ BLACK_WHITE_MEMBERS = {
 class BWAnimalDetectorPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
-        # 按长度降序排列，防止短词拦截长词（比如“企鹅”拦截“卑鄙小企鹅”）
         self.animals = sorted(list(BLACK_WHITE_MEMBERS.keys()), key=len, reverse=True)
         self.pattern = re.compile(f"({'|'.join(self.animals)})")
 
-    @filter.on_message()
+    # 核心改动 2：使用最新版的事件监听装饰器，拦截所有群聊和私聊消息
+    @filter.event_message_type(filter.EventMessageType.ALL)
     async def handle_group_message(self, event: AstrMessageEvent):
         msg_text = event.message_str.strip()
         
-        # 排除科普和常规描述
         ignore_words = ["百度", "百科", "科普", "水族馆", "动物园", "视频"]
         if any(word in msg_text for word in ignore_words):
             return
@@ -62,5 +60,5 @@ class BWAnimalDetectorPlugin(Star):
                 f"📖 内部梗概：{target['desc']}"
             )
             
-            event.stop_event() # 阻断后续让大模型去思考的流程
-            yield event
+            event.stop_event() 
+            yield event.plain_result(reply_text)
