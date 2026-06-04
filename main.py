@@ -1,6 +1,6 @@
 import re
 from astrbot.api.event import filter, AstrMessageEvent
-from astrbot.api.plugin import PluginBase
+from astrbot.api.all import register
 from astrbot.api.model.Message import Plain
 
 BLACK_WHITE_MEMBERS = {
@@ -34,12 +34,10 @@ BLACK_WHITE_MEMBERS = {
     }
 }
 
-# 最新版导入中，注册插件的装饰器或基类已移至顶层或独立模块
-# 如果下方 `PluginBase` 仍然报错，在最新版本中可以直接继承 object 或通过 astrbot.api.all 导入
-@filter.register_plugin("bw_animal_detector", "黑白动物梗侦测", "自动检测QQ群聊中群友用黑白动物代指某人的内部梗。", "1.0.0")
-class BWAnimalDetectorPlugin(PluginBase):
+@register("bw_animal_detector", "黑白动物梗侦测", "自动检测QQ群聊中群友用黑白动物代指某人的内部梗。", "1.0.0")
+class BWAnimalDetectorPlugin:
     def __init__(self, context):
-        super().__init__(context)
+        self.context = context
         self.animals = sorted(list(BLACK_WHITE_MEMBERS.keys()), key=len, reverse=True)
         self.pattern = re.compile(f"({'|'.join(self.animals)})")
 
@@ -63,5 +61,5 @@ class BWAnimalDetectorPlugin(PluginBase):
                 f"📖 内部梗概：{target['desc']}"
             )
             
-            event.stop_event()
+            event.stop_event() # 阻断后续大模型普通对话
             await event.send_message([Plain(reply_text)])
