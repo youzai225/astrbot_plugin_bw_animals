@@ -1,7 +1,6 @@
 import re
 from astrbot.api.event import filter, AstrMessageEvent
-from astrbot.api.all import register
-from astrbot.api.model.Message import Plain
+from astrbot.api.star import Context, Star, register
 
 BLACK_WHITE_MEMBERS = {
     "卑鄙小企鹅": {
@@ -34,10 +33,11 @@ BLACK_WHITE_MEMBERS = {
     }
 }
 
-@register("bw_animal_detector", "黑白动物梗侦测", "自动检测QQ群聊中群友用黑白动物代指某人的内部梗。", "1.0.0")
-class BWAnimalDetectorPlugin:
-    def __init__(self, context):
-        self.context = context
+@register("bw_animal_detector", "Youzai225", "自动检测QQ群聊中群友用黑白动物代指某人的内部梗。", "1.0.0")
+class BWAnimalDetectorPlugin(Star):
+    def __init__(self, context: Context):
+        super().__init__(context)
+        # 按长度降序排列，防止短词拦截长词（比如“企鹅”拦截“卑鄙小企鹅”）
         self.animals = sorted(list(BLACK_WHITE_MEMBERS.keys()), key=len, reverse=True)
         self.pattern = re.compile(f"({'|'.join(self.animals)})")
 
@@ -45,6 +45,7 @@ class BWAnimalDetectorPlugin:
     async def handle_group_message(self, event: AstrMessageEvent):
         msg_text = event.message_str.strip()
         
+        # 排除科普和常规描述
         ignore_words = ["百度", "百科", "科普", "水族馆", "动物园", "视频"]
         if any(word in msg_text for word in ignore_words):
             return
@@ -61,5 +62,5 @@ class BWAnimalDetectorPlugin:
                 f"📖 内部梗概：{target['desc']}"
             )
             
-            event.stop_event() # 阻断后续大模型普通对话
-            await event.send_message([Plain(reply_text)])
+            event.stop_event() # 阻断后续让大模型去思考的流程
+            yield event
